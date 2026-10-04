@@ -23,7 +23,20 @@ src/client/
 tests/run.luau         tests for RoomPicker + Economy (run with Lune)
 ```
 
-## First-time setup (about 20 minutes)
+## Fastest way to try it (no Rojo needed)
+1. Install **Roblox Studio** from https://create.roblox.com.
+2. Download **`dist/VacuumIsComing.rbxl`**: on GitHub, open the file and click the download button.
+3. Double-click it to open it in Studio, then press **Play**.
+
+The place already contains every script plus the lobby (baseplate, spawn and the yellow Toy Box zone). It starts in **test-run mode**: you run through grey placeholder rooms while the red ball (Mr. Suckles) chases you.
+- Yellow pad = goal
+- Blue pad = frees bagged friends
+
+To see the lobby instead: select **Workspace** → Attributes → untick **StudioRunMode**.
+
+The file is a snapshot. It's rebuilt with `rojo build place.project.json -o dist/VacuumIsComing.rbxl`. For day-to-day work, use the Rojo setup below so code changes sync live.
+
+## First-time setup with live sync (about 20 minutes)
 
 ### 1. Install the tools
 1. **Roblox Studio:** download it from https://create.roblox.com and log in.
