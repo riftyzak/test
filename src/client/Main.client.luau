@@ -48,7 +48,7 @@ end
 local coins = label(gui, "", UDim2.fromOffset(220, 50), UDim2.new(0, 16, 0, 16))
 coins.TextXAlignment = Enum.TextXAlignment.Left
 local function refreshCoins()
-	coins.Text = `🪙 {player:GetAttribute("Coins") or 0}`
+	coins.Text = `Coins: {player:GetAttribute("Coins") or 0}`
 end
 player:GetAttributeChangedSignal("Coins"):Connect(refreshCoins)
 refreshCoins()
@@ -148,9 +148,43 @@ end)
 local result = label(gui, "", UDim2.fromOffset(600, 80), UDim2.new(0.5, -300, 0.3, 0))
 result.Visible = false;
 (Remotes:WaitForChild("RunResult") :: RemoteEvent).OnClientEvent:Connect(function(earned: number, won: boolean)
-	result.Text = if won then `You unplugged Mr. Suckles! +{earned} 🪙` else `Sucked up! +{earned} 🪙`
+	result.Text = if won then `You unplugged Mr. Suckles! +{earned} coins` else `Sucked up! +{earned} coins`
 	result.Visible = true
 	task.delay(7, function()
 		result.Visible = false
 	end)
 end)
+
+-- Room mechanics driven by part attributes (the client owns its character's physics,
+-- so pushes have to happen here to feel instant):
+--   BouncePower  launch upward when landing on the part
+--   Knockback    shove away from the part on contact
+local lastPush = 0
+local function onCharacter(character: Model)
+	local humanoid = character:WaitForChild("Humanoid") :: Humanoid
+	local root = character:WaitForChild("HumanoidRootPart") :: BasePart
+	humanoid.Touched:Connect(function(hit: BasePart)
+		local now = os.clock()
+		if now - lastPush < 0.25 or player:GetAttribute("Bagged") == true then
+			return
+		end
+		local bounce = hit:GetAttribute("BouncePower")
+		local knock = hit:GetAttribute("Knockback")
+		local velocity = root.AssemblyLinearVelocity
+		if typeof(bounce) == "number" and root.Position.Y > hit.Position.Y + hit.Size.Y / 2 then
+			lastPush = now
+			root.AssemblyLinearVelocity = Vector3.new(velocity.X, bounce, velocity.Z)
+		elseif typeof(knock) == "number" then
+			lastPush = now
+			local away = (root.Position - hit.Position) * Vector3.new(1, 0, 1)
+			if away.Magnitude < 0.1 then
+				away = Vector3.new(1, 0, 0)
+			end
+			root.AssemblyLinearVelocity = away.Unit * knock + Vector3.new(0, knock * 0.6, 0)
+		end
+	end)
+end
+player.CharacterAdded:Connect(onCharacter)
+if player.Character then
+	task.spawn(onCharacter, player.Character)
+end

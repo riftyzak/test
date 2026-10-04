@@ -34,6 +34,8 @@ The place already contains every script plus the lobby (baseplate, spawn and the
 
 To see the lobby instead: select **Workspace** → Attributes → untick **StudioRunMode**.
 
+**Testing one room:** the Workspace attribute **StudioTestRoom** (e.g. `TrampolineBed`) puts that room straight after the start, every run. Tick **StudioTestHard** to get its hard version. Clear the text to go back to random rooms.
+
 The file is a snapshot. It's rebuilt with `rojo build place.project.json -o dist/VacuumIsComing.rbxl`. For day-to-day work, use the Rojo setup below so code changes sync live.
 
 ## First-time setup with live sync (about 20 minutes)
@@ -88,6 +90,10 @@ Teleports don't work in Studio, so there's a test switch:
 4. Room scripts can read the model's attributes `Difficulty` ("normal"/"hard"), `PlayerCount` and `Active` to switch on hard mode and solo versions.
 
 Optional: put a Model named `Vacuum` in ServerStorage to replace the red ball.
+
+Rooms can also be **built in code**: a ModuleScript in `src/server/Rooms/` named like the room id, with a `build(difficulty)` function that returns the Model (see `TrampolineBed.luau`).
+- Load order: a Studio model in ServerStorage.Rooms, then a code-built room, then the placeholder.
+- Generic mechanics: give any part the attribute `BouncePower` (number) to make it a trampoline, or `Knockback` (number) to make it shove players.
 
 Any room that isn't built yet automatically uses a placeholder, so you can build them one at a time.
 

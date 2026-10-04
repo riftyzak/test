@@ -10,6 +10,8 @@
 --   BagRelease  (optional) touching it frees every bagged teammate
 -- Optional: a Folder "VacuumPath" with Parts named 1, 2, 3... for the vacuum's route.
 -- Rooms read their Attributes "Difficulty" ("normal"/"hard") and "PlayerCount" to adapt.
+-- Rooms can also be built in code: a ModuleScript in Server/Rooms named like the room id,
+-- returning { build = function(difficulty): Model }.
 -- Missing rooms are replaced by a grey placeholder so the game is playable right away.
 
 local Players = game:GetService("Players")
@@ -122,10 +124,17 @@ local function buildRooms(slots: { RoomPicker.Slot })
 	local previousExit = CFrame.new(0, 50, 0)
 
 	for _, slot in slots do
+		-- Priority: a model you built in Studio > a room built in code > grey placeholder.
 		local template = templates and templates:FindFirstChild(slot.id)
-		local model = if template and template:IsA("Model")
-			then template:Clone()
-			else placeholderRoom(slot.id, slot.kind)
+		local builder = script.Parent.Rooms:FindFirstChild(slot.id)
+		local model
+		if template and template:IsA("Model") then
+			model = template:Clone()
+		elseif builder and builder:IsA("ModuleScript") then
+			model = (require(builder) :: any).build(slot.difficulty)
+		else
+			model = placeholderRoom(slot.id, slot.kind)
+		end
 		local entrance = findPart(model, "Entrance")
 		local exit = findPart(model, "Exit")
 		assert(entrance and exit and findPart(model, "Goal"), `room {slot.id} needs Entrance, Exit and Goal parts`)
@@ -422,6 +431,15 @@ function RunManager.start()
 		safe = Config.SafeRoom,
 		boss = Config.BossRoom,
 	})
+	-- Studio testing: workspace attribute StudioTestRoom = "TrampolineBed" puts that room right after the start.
+	local testRoom = workspace:GetAttribute("StudioTestRoom")
+	if RunService:IsStudio() and typeof(testRoom) == "string" and testRoom ~= "" then
+		slots[2] = {
+			id = testRoom,
+			kind = "room",
+			difficulty = if workspace:GetAttribute("StudioTestHard") == true then "hard" else "normal",
+		}
+	end
 	buildRooms(slots)
 	state.vacuum = makeVacuum()
 

@@ -152,7 +152,9 @@
       },
       "$className": "Workspace",
       "$attributes": {
-        "StudioRunMode": true
+        "StudioRunMode": true,
+        "StudioTestRoom": "TrampolineBed",
+        "StudioTestHard": false
       }
     }
   }
